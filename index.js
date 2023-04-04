@@ -1,8 +1,9 @@
-
+const inquirer = require('inquirer');
 const files = require('fs');
-const { writeFile } = require('fs/promises');
-const SVG = require('./shapes.js');
-const { Cricle, Square, Triangle } = require('./shapes.js');
+// const { writeFile } = require('fs');
+const SVG = require('./lib/shapes.js');
+const { Circle, Square, Triangle } = require('./lib/shapes.js');
+
 
 class Svg {
     constructor() {
@@ -10,7 +11,7 @@ class Svg {
         this.shapeElement = "";
     }
     render() {
-        return `svg version="1.1" xmlns="http://www.w3.org/200/svg" width="300" height="200" viewBox="0 0 `
+        return `<svg version="1.1" width="300" height="200" xmlns='http: //www.w3.org/2000/svg'>${this.userShape}</svg>`;
     }
     setTextElement(text, color) {
         this.textElement = `<text x="150" y="125" font-size="30" fill="${color}">${text}</text>`
@@ -32,7 +33,7 @@ const questions = [
     },
     {
         type: "input",
-        name: "color",
+        name: "textColor",
         message: "Choose a text color, or a hexadecimal number:",
 
     },
@@ -44,8 +45,52 @@ const questions = [
     },
     {
         type: "input",
-        name: "color",
+        name: "shapeColor",
         message: "Choose the shapes color, or a hexadecimal number:",
 
     },
 ]
+
+//function to write to file
+function writeToFile(fileName, data) {
+    files.writeFile(fileName, data, (err) => {
+        if (err) throw error
+    })
+    console.log("You have generated a new logo!")
+}
+async function init() {
+    let svgString;
+    const answers = await inquirer.prompt(questions);
+    const shapeColor = answers.shapeColor;
+    const textColor = answers.textColor;
+    let userText
+
+    if (answers.text.length > 0 && answers.text.length < 4) {
+        userText = answers.text
+    } else {
+        console.log("Invalid, input must be three characters or less")
+        return
+    }
+
+    let userShape
+    if (answers.shape === "circle") {
+        userShape = new Circle()
+    } else if (answers.shape === "triangle") {
+        userShape = new Triangle()
+    } else if (answers.shape === "square") {
+        userShape = new Square()
+    } else {
+        console.log("Invalid, choose a shape")
+        return
+    }
+    userShape.setColor(shapeColor)
+
+    let svg = new Svg();
+    svg.setTextElement(userText, textColor)
+    svg.setShapeElement(userShape)
+    svgString = svg.render()
+
+    writeToFile("logo.svg", svgString)
+}
+
+init();
